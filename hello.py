@@ -11,7 +11,7 @@ def main() -> None:
     use_gpu = torch.cuda.is_available()
     dist.init_process_group(backend="nccl" if use_gpu else "gloo")
     dist.barrier()
-    logger.info(f"Hello from rank {dist.get_rank()}")
+    logger.info(f"Hello World from rank {dist.get_rank()}")
     dist.barrier()
 
 if __name__ == "__main__":
