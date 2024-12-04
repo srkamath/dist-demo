@@ -1,6 +1,7 @@
 import torch
 import logging
 import sys
+import os
 from torch import distributed as dist
 
 logger = logging.getLogger(__name__)
@@ -9,10 +10,15 @@ logger.setLevel(logging.INFO)
 
 def main() -> None:
     use_gpu = torch.cuda.is_available()
-    dist.init_process_group(backend="nccl" if use_gpu else "gloo")
-    dist.barrier()
-    logger.info(f"Hello World from rank {dist.get_rank()}")
-    dist.barrier()
+    local_rank = int(os.environ['LOCAL_RANK'])
+    torch.cuda.set_device(local_rank)
+    dist.init_process_group(backend="nccl" if use_gpu else "gloo", init_method='env://')
+    try:
+        dist.barrier(device_ids=[local_rank])
+        logger.info(f"Hello World from rank {dist.get_rank()}")
+        dist.barrier(device_ids=[local_rank])
+    finally:
+        dist.destroy_process_group()
 
 if __name__ == "__main__":
     main()
